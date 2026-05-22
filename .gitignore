@@ -1,0 +1,10 @@
+# Compiled COBOL binaries
+ACCTINQ
+ACCTINQ.exe
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+
+# Environment Variables
+.env
