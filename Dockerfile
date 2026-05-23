@@ -16,6 +16,7 @@ COPY . .
 
 # Compile the COBOL binary *inside* the container architecture
 RUN cobc -x ACCTINQ.CBL
+RUN cobc -x ACCTUPD.CBL
 
 # Expose the API port
 EXPOSE 5000

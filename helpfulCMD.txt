@@ -1,0 +1,10 @@
+docker rm legacy-core
+
+cd "/mnt/c/Users/zorua/OneDrive/Desktop/Mainframe Project"
+docker build -t mainframe-api-bridge .
+
+docker run -p 5000:5000 -d \
+  --name legacy-core \
+  -v "/mnt/c/Users/zorua/OneDrive/Desktop/Mainframe Project/ACCOUNTS.DAT:/app/ACCOUNTS.DAT" \
+  -v "/mnt/c/Users/zorua/OneDrive/Desktop/Mainframe Project/AUDIT.log:/app/AUDIT.log" \
+  mainframe-api-bridge
