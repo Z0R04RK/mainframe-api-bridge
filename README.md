@@ -1,5 +1,3 @@
----
-
 # Global Core Banking: z/OS Modernization & Transaction Pipeline
 
 An architectural proof-of-concept demonstrating a read/write bridge between a legacy COBOL backend and a modern React web interface.
