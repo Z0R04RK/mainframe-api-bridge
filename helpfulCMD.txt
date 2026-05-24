@@ -1,10 +1,7 @@
-docker rm legacy-core
+// Submit JCL to compile the COBOL source into a z/OS binary
+// (Run from the root project folder)
+zowe jobs submit local-file "JCL/COMPILE.JCL"
 
-cd "/mnt/c/Users/zorua/OneDrive/Desktop/Mainframe Project"
-docker build -t mainframe-api-bridge .
-
-docker run -p 5000:5000 -d \
-  --name legacy-core \
-  -v "/mnt/c/Users/zorua/OneDrive/Desktop/Mainframe Project/ACCOUNTS.DAT:/app/ACCOUNTS.DAT" \
-  -v "/mnt/c/Users/zorua/OneDrive/Desktop/Mainframe Project/AUDIT.log:/app/AUDIT.log" \
-  mainframe-api-bridge
+// Manually trigger a batch run bypassing the web dashboard
+// (Run from the root project folder)
+zowe jobs submit local-file "JCL/RUN.JCL"

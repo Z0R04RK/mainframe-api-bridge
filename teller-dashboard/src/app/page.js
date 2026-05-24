@@ -9,40 +9,65 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState('Teller'); // Default Role
 
-  const fetchAccount = async (e) => {
-    e.preventDefault();
-    setLoading(true); setError(''); setAccountData(null);
-
+const pullFromMainframe = async (targetId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/accounts/${accountId}`);
+      console.log(`[UI] Fetching fresh data for ${targetId}...`);
+      
+      //Now uses the internal Next.js route.
+      const response = await fetch(`/api/accounts/${targetId}?timestamp=${Date.now()}`, {
+        cache: 'no-store' 
+      });
+      
       const json = await response.json();
       if (!response.ok) throw new Error(json.error || 'Failed to fetch account');
+      
+      console.log(`[UI] Received Status: ${json.data.accountStatus}`);
       setAccountData(json.data);
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
+  //Searching
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setLoading(true); 
+    setError(''); 
+    setAccountData(null); // Clear the screen for a completely new search
+    
+    await pullFromMainframe(accountId);
+    setLoading(false);
+  };
+
+  //Updating the status
   const updateAccountStatus = async (newStatus) => {
+    setLoading(true); 
     try {
-      const response = await fetch(`http://localhost:5000/api/accounts/update`, {
+      console.log(`[UI] Firing payload to mainframe for status: ${newStatus}`);
+      const response = await fetch(`/api/update`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userRole}` // Passing the simulated RACF token
+          'Authorization': `Bearer ${userRole}` 
         },
         body: JSON.stringify({ accountId: accountData.accountNumber, newStatus })
       });
       
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error);
+      if (!response.ok) throw new Error(json.error || 'Mainframe rejected the update payload.');
       
-      // If successful, re-fetch the account to prove the change worked
-      document.querySelector('.search-form button').click();
+      console.log(`[UI] Mainframe accepted job. Waiting for execution spool...`);
+      
+      // Bumped to 4.5 seconds to guarantee the mainframe finishes the disk write
+      setTimeout(async () => {
+        console.log(`[UI] Wait complete. Triggering fresh pull...`);
+        await pullFromMainframe(accountData.accountNumber);
+        setLoading(false);
+      }, 4500);
+
     } catch (err) {
       alert(`SYSTEM ALERT:\n${err.message}`);
+      setLoading(false);
     }
   };
 
@@ -62,9 +87,9 @@ export default function Dashboard() {
       <main className="main-content">
         <section className="search-section">
           <h2>Account Inquiry</h2>
-          <form onSubmit={fetchAccount} className="search-form">
+          <form onSubmit={handleSearch} className="search-form">
             <input type="text" value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder="Enter 8-digit Account ID" pattern="\d{8}" required />
-            <button type="submit" disabled={loading}>{loading ? 'Querying...' : 'Retrieve Account'}</button>
+            <button type="submit" disabled={loading}>{loading ? 'Querying Mainframe...' : 'Retrieve Account'}</button>
           </form>
           {error && <div className="error-badge">{error}</div>}
         </section>
@@ -74,7 +99,7 @@ export default function Dashboard() {
             <div className="card">
               <div className="card-header">
                 <h3>{accountData.customerName}</h3>
-                <span className={`status-badge ${accountData.accountStatus.toLowerCase()}`}>{accountData.accountStatus}</span>
+                <span className={`status-badge ${accountData.accountStatus.trim().toLowerCase()}`}>{accountData.accountStatus}</span>
               </div>
               
               <div className="data-grid">
@@ -95,12 +120,14 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button 
                     onClick={() => updateAccountStatus('FROZEN')} 
-                    style={{ background: '#ef4444', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    disabled={loading}
+                    style={{ background: loading ? '#ccc' : '#ef4444', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
                     Freeze Account
                   </button>
                   <button 
                     onClick={() => updateAccountStatus('ACTIVE')} 
-                    style={{ background: '#10b981', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    disabled={loading}
+                    style={{ background: loading ? '#ccc' : '#10b981', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
                     Remove Freeze
                   </button>
                 </div>
