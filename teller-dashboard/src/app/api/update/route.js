@@ -5,6 +5,18 @@ import path from 'path';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 export async function POST(request) {
+    const authHeader = request.headers.get('authorization');
+
+    // If the header is missing, or the user is not a Manager, slam the door.
+    if (!authHeader || !authHeader.includes('Bearer Manager')) {
+        console.warn(`[SECURITY ALERT] Blocked unauthorized batch job attempt.`);
+        return Response.json(
+            { success: false, error: 'Access Denied: Administrator privileges required to modify account status.' }, 
+            { status: 403 }
+        );
+    }
+
+
     const { accountId, newStatus } = await request.json();
 
     //Have to ensure that they are 8-bytes

@@ -9,11 +9,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState('Teller'); // Default Role
 
-const pullFromMainframe = async (targetId) => {
+  const isManager = userRole === 'Manager';
+
+  const pullFromMainframe = async (targetId) => {
     try {
       console.log(`[UI] Fetching fresh data for ${targetId}...`);
       
-      //Now uses the internal Next.js route.
       const response = await fetch(`/api/accounts/${targetId}?timestamp=${Date.now()}`, {
         cache: 'no-store' 
       });
@@ -28,18 +29,16 @@ const pullFromMainframe = async (targetId) => {
     }
   };
 
-  //Searching
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true); 
     setError(''); 
-    setAccountData(null); // Clear the screen for a completely new search
+    setAccountData(null); 
     
     await pullFromMainframe(accountId);
     setLoading(false);
   };
 
-  //Updating the status
   const updateAccountStatus = async (newStatus) => {
     setLoading(true); 
     try {
@@ -58,7 +57,6 @@ const pullFromMainframe = async (targetId) => {
       
       console.log(`[UI] Mainframe accepted job. Waiting for execution spool...`);
       
-      // Bumped to 4.5 seconds to guarantee the mainframe finishes the disk write
       setTimeout(async () => {
         console.log(`[UI] Wait complete. Triggering fresh pull...`);
         await pullFromMainframe(accountData.accountNumber);
@@ -77,7 +75,7 @@ const pullFromMainframe = async (targetId) => {
         <h1>Global Core Banking | Teller Interface</h1>
         <div>
           <label style={{ fontSize: '0.85rem', color: '#666', marginRight: '10px' }}>ACTIVE TERMINAL ROLE:</label>
-          <select value={userRole} onChange={(e) => setUserRole(e.target.value)} style={{ padding: '5px' }}>
+          <select value={userRole} onChange={(e) => setUserRole(e.target.value)} style={{ padding: '5px', fontWeight: 'bold' }}>
             <option value="Teller">Teller 042 (Standard)</option>
             <option value="Manager">Manager 081 (Admin)</option>
           </select>
@@ -116,19 +114,51 @@ const pullFromMainframe = async (targetId) => {
 
               {/* Administrative Actions Panel */}
               <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: '#666', textTransform: 'uppercase', fontSize: '0.85rem' }}>Administrative Actions</h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                  <h4 style={{ margin: 0, color: '#333', textTransform: 'uppercase', fontSize: '0.85rem' }}>Administrative Actions</h4>
+                  
+                  {/* Contextual User Feedback */}
+                  {!isManager && (
+                    <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 'bold', background: '#fee2e2', padding: '3px 8px', borderRadius: '12px' }}>
+                      Manager Override Required
+                    </span>
+                  )}
+                </div>
+
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button 
                     onClick={() => updateAccountStatus('FROZEN')} 
-                    disabled={loading}
-                    style={{ background: loading ? '#ccc' : '#ef4444', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
-                    Freeze Account
+                    disabled={loading || !isManager}
+                    style={{ 
+                      background: (loading || !isManager) ? '#e5e7eb' : '#ef4444', 
+                      color: (loading || !isManager) ? '#9ca3af' : 'white', 
+                      padding: '10px 15px', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: (loading || !isManager) ? 'not-allowed' : 'pointer', 
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                    {!isManager && <span>🔒</span>} Freeze Account
                   </button>
                   <button 
                     onClick={() => updateAccountStatus('ACTIVE')} 
-                    disabled={loading}
-                    style={{ background: loading ? '#ccc' : '#10b981', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
-                    Remove Freeze
+                    disabled={loading || !isManager}
+                    style={{ 
+                      background: (loading || !isManager) ? '#e5e7eb' : '#10b981', 
+                      color: (loading || !isManager) ? '#9ca3af' : 'white', 
+                      padding: '10px 15px', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: (loading || !isManager) ? 'not-allowed' : 'pointer', 
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                    {!isManager && <span>🔒</span>} Remove Freeze
                   </button>
                 </div>
               </div>
