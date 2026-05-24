@@ -29,6 +29,14 @@ This project is maintained across two distinct branches to demonstrate both nati
 
 Because the `main` branch interfaces with live IBM Z hardware, Docker emulation is no longer required. The entire stack runs natively via Next.js.
 
+**##0. Mainframe Infrastructure Setup (One-Time)**
+
+Before starting the Next.js server, the physical z/OS environment must be initialized. The `/JCL` folder contains the Infrastructure-as-Code required to allocate the datasets and compile the COBOL binaries.
+
+1. Open `ALLOCATE.JCL`, `ALLOCPDS.JCL`, and `COMPILE.JCL`.
+2. Perform a global Find & Replace, changing `{{HLQ}}` to your specific IBM Z user ID (e.g., `Z12345`).
+3. Submit the jobs via Zowe Explorer or ISPF to physically allocate your `BANK.ACCOUNTS` dataset and compile the `ACCTUPD` executable into your load library.
+
 **1. Clone the repository and navigate to the application folder:**
 ```bash
 git clone [https://github.com/Z0R04RK/mainframe-api-bridge.git](https://github.com/Z0R04RK/mainframe-api-bridge.git)
@@ -38,7 +46,7 @@ cd mainframe-api-bridge/teller-dashboard
 **2. Configure Mainframe Credentials:**
 Create a `.env` file inside the `teller-dashboard` directory to securely store your routing parameters.
 ```env
-MF_USER=Z83965
+MF_USER=Z12345
 MF_PASSWORD=your_mainframe_password
 ```
 

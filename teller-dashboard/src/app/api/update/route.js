@@ -28,6 +28,9 @@ export async function POST(request) {
     const jclPath = path.join(process.cwd(), '..', 'JCL', 'RUN.JCL');
     let jclText = fs.readFileSync(jclPath, 'utf8');
 
+    //Inject the dynamic User ID (HLQ) into the Job Card and Dataset references
+    jclText = jclText.replaceAll('{{HLQ}}', process.env.MF_USER);
+
     //Regex to replace the default params
     const parmRegex = /PARM='.*'/;
     jclText = jclText.replace(parmRegex, `PARM='${targetId}${status}'`);
